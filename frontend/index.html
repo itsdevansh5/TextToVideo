@@ -1,0 +1,43 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prompt2Video</title>
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: 40px auto; }
+    textarea, select, button { width: 100%; margin-top: 10px; padding: 10px; }
+    video { margin-top: 20px; width: 100%; }
+  </style>
+</head>
+<body>
+  <h2>🎬 Prompt2Video</h2>
+
+  <textarea id="prompt" rows="4" placeholder="Enter your prompt..."></textarea>
+
+  <select id="style">
+    <option value="cinematic">Cinematic</option>
+    <option value="animation">Animation</option>
+    <option value="realistic">Realistic</option>
+  </select>
+
+  <button onclick="generate()">Generate Video</button>
+
+  <video id="video" controls></video>
+
+  <script>
+    async function generate() {
+      const prompt = document.getElementById("prompt").value;
+      const style = document.getElementById("style").value;
+
+      const res = await fetch("https://texttovideo-8ena.onrender.com//generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, style })
+      });
+
+      const data = await res.json();
+      document.getElementById("video").src = data.video_url;
+    }
+  </script>
+</body>
+</html>
