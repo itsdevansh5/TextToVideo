@@ -9,15 +9,16 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-MODEL_VERSION = "anotherjesse/zeroscope-v2-xl"  # text-to-video
+# ✅ FREE TEXT-TO-VIDEO MODEL
+MODEL_VERSION = "minimax/video-01"
 
 def generate_video(prompt: str) -> str:
     payload = {
         "version": MODEL_VERSION,
         "input": {
             "prompt": prompt,
-            "num_frames": 24,
-            "fps": 8
+            "duration": 4,      # seconds
+            "fps": 12
         }
     }
 
@@ -25,14 +26,16 @@ def generate_video(prompt: str) -> str:
     response.raise_for_status()
 
     prediction = response.json()
-
-    # Polling (simple version)
     prediction_id = prediction["id"]
+
     status_url = f"{REPLICATE_URL}/{prediction_id}"
 
     while True:
         result = requests.get(status_url, headers=HEADERS).json()
+
         if result["status"] == "succeeded":
-            return result["output"]
+            output = result["output"]
+            return output[0] if isinstance(output, list) else output
+
         if result["status"] == "failed":
             raise Exception("Video generation failed")
