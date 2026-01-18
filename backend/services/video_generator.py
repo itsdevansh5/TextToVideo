@@ -17,8 +17,8 @@ def generate_video(prompt: str) -> str:
         "version": MODEL_VERSION,
         "input": {
             "prompt": prompt,
-            "duration": 4,      # seconds
-            "fps": 12
+            "duration": 3,      # seconds
+            "fps": 8
         }
     }
 
