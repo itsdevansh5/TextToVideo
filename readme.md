@@ -10,6 +10,13 @@ and video generation into a clean, user-facing web demo.
 
 ------------------------------------------------------------------------
 
+## Deployment
+
+-  ** Web App link - 
+https://texttovideobydevansh.netlify.app/
+
+
+------------------------------------------------------------------------
 ## 🚀 Features
 
 -   **Text-to-Video Generation**
