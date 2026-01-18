@@ -1,18 +1,68 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>Prompt2Video</title>
+
   <style>
-    body { font-family: Arial; max-width: 600px; margin: 40px auto; }
-    textarea, select, button { width: 100%; margin-top: 10px; padding: 10px; }
-    video { margin-top: 20px; width: 100%; }
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      text-align: center;
+    }
+
+    textarea, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    video {
+      margin-top: 20px;
+      width: 100%;
+      display: none;
+    }
+
+    /* Loading spinner */
+    .loader {
+      margin: 20px auto;
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #555;
+    }
   </style>
 </head>
+
 <body>
   <h2>🎬 Prompt2Video</h2>
 
-  <textarea id="prompt" rows="4" placeholder="Enter your prompt..."></textarea>
+  <textarea
+    id="prompt"
+    rows="4"
+    placeholder="Enter your prompt..."
+  ></textarea>
 
   <select id="style">
     <option value="cinematic">Cinematic</option>
@@ -20,23 +70,59 @@
     <option value="realistic">Realistic</option>
   </select>
 
-  <button onclick="generate()">Generate Video</button>
+  <button id="generateBtn" onclick="generateVideo()">Generate Video</button>
+
+  <div class="loader" id="loader"></div>
+  <div class="status" id="status"></div>
 
   <video id="video" controls></video>
 
   <script>
-    async function generate() {
+    async function generateVideo() {
       const prompt = document.getElementById("prompt").value;
       const style = document.getElementById("style").value;
 
-      const res = await fetch("https://texttovideo-8ena.onrender.com//generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, style })
-      });
+      const button = document.getElementById("generateBtn");
+      const loader = document.getElementById("loader");
+      const status = document.getElementById("status");
+      const video = document.getElementById("video");
 
-      const data = await res.json();
-      document.getElementById("video").src = data.video_url;
+      if (!prompt.trim()) {
+        alert("Please enter a prompt.");
+        return;
+      }
+
+      // UI state: loading
+      button.disabled = true;
+      loader.style.display = "block";
+      status.innerText = "Generating video... this may take up to a minute.";
+      video.style.display = "none";
+
+      try {
+        const response = await fetch("https://texttovideo-8ena.onrender.com/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt, style })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || "Something went wrong");
+        }
+
+        video.src = data.video_url;
+        video.style.display = "block";
+        status.innerText = "Video generated successfully 🎉";
+
+      } catch (error) {
+        console.error(error);
+        status.innerText = "Failed to generate video. Please try again.";
+        alert(error.message);
+      } finally {
+        loader.style.display = "none";
+        button.disabled = false;
+      }
     }
   </script>
 </body>
