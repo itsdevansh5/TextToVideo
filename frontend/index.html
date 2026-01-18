@@ -77,53 +77,56 @@
 
   <video id="video" controls></video>
 
-  <script>
-    async function generateVideo() {
-      const prompt = document.getElementById("prompt").value;
-      const style = document.getElementById("style").value;
-
-      const button = document.getElementById("generateBtn");
-      const loader = document.getElementById("loader");
-      const status = document.getElementById("status");
-      const video = document.getElementById("video");
-
-      if (!prompt.trim()) {
-        alert("Please enter a prompt.");
-        return;
-      }
-
-      // UI state: loading
-      button.disabled = true;
-      loader.style.display = "block";
-      status.innerText = "Generating video... this may take up to a minute.";
-      video.style.display = "none";
-
-      try {
-        const response = await fetch("https://texttovideo-8ena.onrender.com/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt, style })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.detail || "Something went wrong");
-        }
-
-        video.src = data.video_url;
-        video.style.display = "block";
-        status.innerText = "Video generated successfully 🎉";
-
-      } catch (error) {
-        console.error(error);
-        status.innerText = "Failed to generate video. Please try again.";
-        alert(error.message);
-      } finally {
-        loader.style.display = "none";
-        button.disabled = false;
-      }
-    }
-  </script>
 </body>
+<script>
+const BACKEND = "YOUR_BACKEND_URL";
+
+async function generate() {
+  const prompt = document.getElementById("prompt").value;
+  const style = document.getElementById("style").value;
+  const status = document.getElementById("status");
+  const video = document.getElementById("video");
+
+  status.innerText = "Starting…";
+  video.style.display = "none";
+
+  const res = await fetch(`${BACKEND}/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt, style })
+  });
+
+  const data = await res.json();
+
+  if (data.cached) {
+    video.src = data.video_url;
+    video.style.display = "block";
+    status.innerText = "Loaded from cache";
+    return;
+  }
+
+  const jobId = data.job_id;
+
+  const poll = setInterval(async () => {
+    const s = await fetch(`${BACKEND}/status/${jobId}`);
+    const d = await s.json();
+
+    if (d.message) {
+      status.innerText = d.message;
+    }
+
+    if (d.status === "done") {
+      video.src = d.video_url;
+      video.style.display = "block";
+      status.innerText = "Done 🎉";
+      clearInterval(poll);
+    }
+
+    if (d.status === "failed") {
+      status.innerText = "Failed ❌";
+      clearInterval(poll);
+    }
+  }, 3000);
+}
+</script>
 </html>
