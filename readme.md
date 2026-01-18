@@ -1,103 +1,119 @@
-# Prompt2Video 🎬
+# Prompt2Video 🎬  
+**An Asynchronous AI Text-to-Video Generation System with Live Progress Tracking**
 
-Prompt2Video is an AI-powered web application that converts natural
-language text prompts into short videos using a modular, agent-based
-backend pipeline and modern generative AI models.
+🌐 **Live Demo:** https://texttovideobydevansh.netlify.app/
 
-The project demonstrates real-world AI system design, API integration,
-and deployment practices by combining prompt processing, style control,
-and video generation into a clean, user-facing web demo.
+---
 
-------------------------------------------------------------------------
+## 📌 Overview
 
-## Deployment
+Prompt2Video is a full-stack AI application that converts natural language prompts into short videos using modern generative AI models.
 
--  ** Web App link - 
-https://texttovideobydevansh.netlify.app/
+The project focuses on real-world AI system design challenges such as long-running inference, non-blocking APIs, asynchronous execution, and user experience during slow operations.
 
+---
 
-------------------------------------------------------------------------
-## 🚀 Features
+## 🚀 Key Features
 
--   **Text-to-Video Generation**
--   **Prompt Enhancement Module (LLM-pluggable)**
--   **Style Selection (Cinematic, Animation, Realistic)**
--   **Deployed Web Demo**
--   **Production-Oriented API Design**
+- Text-to-video generation  
+- Asynchronous backend architecture  
+- Live progress updates via status polling  
+- Job-based execution model  
+- Prompt enhancement pipeline  
+- Style selection  
+- Deployed web application  
 
-------------------------------------------------------------------------
+---
 
-## 🧠 System Architecture
+## 🏗 System Architecture
 
-1.  User submits a text prompt and selects a style
-2.  Prompt enhancement module enriches the input
-3.  Style mapper injects visual parameters
-4.  Video generation via Replicate-hosted model
-5.  Backend polls inference status
-6.  Video URL returned to frontend
+Frontend → FastAPI Backend → Background Worker → AI Video Model
 
-------------------------------------------------------------------------
+The frontend polls the backend for live job updates while video generation runs asynchronously.
+
+---
+
+## 🔁 Asynchronous Job Model
+
+Video generation is GPU-intensive and slow.  
+The backend avoids blocking requests by creating a job, returning immediately, and processing the task in a background thread.
+
+---
+
+## 🧩 Job Lifecycle
+
+Each job stores:
+- status
+- message
+- video_url
+- error
+
+Live messages represent real backend execution stages.
+
+---
+
+## 🔄 Live Status Polling
+
+The frontend periodically requests job status using:
+
+GET /status/{job_id}
+
+This keeps the UI responsive and transparent.
+
+---
+
+## 🧵 Background Execution
+
+Python multithreading allows heavy AI inference to run without blocking HTTP requests.
+
+---
+
+## ⚡ Performance Considerations
+
+- Reduced video duration and FPS
+- Polling-based progress updates
+- Focus on perceived performance
+
+---
 
 ## 🛠 Tech Stack
 
-### Backend
+Backend:
+- Python
+- FastAPI
+- Multithreading
+- Replicate API
 
--   Python
--   FastAPI
--   Replicate API
+Frontend:
+- HTML
+- CSS
+- JavaScript
 
-### Frontend
+---
 
--   HTML
--   CSS
--   JavaScript
+## 🎥 User Flow
 
-### AI
+1. Enter prompt  
+2. Select style  
+3. Generate video  
+4. Observe live progress  
+5. View final output  
 
--   Text-to-video generation models
--   Modular prompt enhancement pipeline
-
-------------------------------------------------------------------------
-
-## ⚙️ Setup & Installation
-
-### Backend
-
-``` bash
-pip install -r requirements.txt
-uvicorn main:app
-```
-
-Create `.env` file:
-
-``` env
-REPLICATE_API_TOKEN=your_token_here
-```
-
-### Frontend
-
-Open `index.html` or deploy via Netlify/Vercel.
-
-------------------------------------------------------------------------
-
-## 🎥 Usage
-
-1.  Enter prompt
-2.  Select style
-3.  Generate video
-4.  View result
-
-------------------------------------------------------------------------
+---
 
 ## 🔮 Future Improvements
 
--   Scene segmentation
--   Async job queues
--   Audio generation
--   Advanced camera control
+- Redis-backed job storage  
+- Distributed task queues  
+- WebSockets / SSE  
+- Audio generation  
 
-------------------------------------------------------------------------
+---
 
 ## 👨‍💻 Author
 
 Devansh Trivedi
+
+---
+
+This project demonstrates how modern AI systems are designed to remain responsive even under slow, GPU-heavy inference workloads.
