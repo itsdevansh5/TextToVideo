@@ -5,6 +5,16 @@ from agent.prompt_enhancer import enhance_prompt
 from agent.style_mapper import apply_style
 from services.video_generator import generate_video
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app = FastAPI(title="Prompt2Video AI")
 
 @app.post("/generate", response_model=VideoResponse)
