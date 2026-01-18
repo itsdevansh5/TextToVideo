@@ -7,6 +7,7 @@ from services.video_generator import generate_video
 
 from fastapi.middleware.cors import CORSMiddleware
 
+app = FastAPI(title="Prompt2Video AI")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,7 +16,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app = FastAPI(title="Prompt2Video AI")
 
 @app.post("/generate", response_model=VideoResponse)
 def generate_video_endpoint(request: VideoRequest):
