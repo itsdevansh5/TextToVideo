@@ -106,7 +106,9 @@ Frontend:
 - Redis-backed job storage  
 - Distributed task queues  
 - WebSockets / SSE  
-- Audio generation  
+- Audio generation
+- User System
+- Seed Memory  
 
 ---
 
