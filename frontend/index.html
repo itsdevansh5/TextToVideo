@@ -8,9 +8,9 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 600px;
+      max-width: 700px;
       margin: 40px auto;
-      text-align: center;
+      padding: 10px;
     }
 
     textarea, select, button {
@@ -22,35 +22,26 @@
 
     button {
       cursor: pointer;
+      font-weight: bold;
+    }
+
+    .job {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 15px;
+      background: #fafafa;
+    }
+
+    .job p {
+      margin: 6px 0;
+      font-size: 14px;
     }
 
     video {
-      margin-top: 20px;
       width: 100%;
-      display: none;
-    }
-
-    /* Loading spinner */
-    .loader {
-      margin: 20px auto;
-      border: 6px solid #f3f3f3;
-      border-top: 6px solid #3498db;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      display: none;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .status {
       margin-top: 10px;
-      font-size: 14px;
-      color: #555;
+      display: none;
     }
   </style>
 </head>
@@ -61,7 +52,7 @@
   <textarea
     id="prompt"
     rows="4"
-    placeholder="Enter your prompt..."
+    placeholder="Describe the video you want to generate..."
   ></textarea>
 
   <select id="style">
@@ -70,63 +61,95 @@
     <option value="realistic">Realistic</option>
   </select>
 
-  <button id="generateBtn" onclick="generateVideo()">Generate Video</button>
+  <button onclick="generateVideo()">Generate Video</button>
 
-  <div class="loader" id="loader"></div>
-  <div class="status" id="status"></div>
+  <h3>Jobs</h3>
+  <div id="jobs"></div>
 
-  <video id="video" controls></video>
+  <script>
+    const BACKEND_URL = "https://texttovideo-8ena.onrender.com";
 
+    function createJobCard(jobId) {
+      const jobDiv = document.createElement("div");
+      jobDiv.className = "job";
+
+      jobDiv.innerHTML = `
+        <p><b>Job ID:</b> ${jobId}</p>
+        <p class="status">Starting...</p>
+        <video controls></video>
+      `;
+
+      document.getElementById("jobs").prepend(jobDiv);
+      return jobDiv;
+    }
+
+    async function generateVideo() {
+      const prompt = document.getElementById("prompt").value.trim();
+      const style = document.getElementById("style").value;
+
+      if (!prompt) {
+        alert("Please enter a prompt");
+        return;
+      }
+
+      let response;
+      try {
+        response = await fetch(`${BACKEND_URL}/generate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt, style })
+        });
+      } catch (err) {
+        alert("Backend not reachable");
+        return;
+      }
+
+      const data = await response.json();
+
+      // Cached response
+      if (data.cached) {
+        const card = createJobCard("cached");
+        card.querySelector(".status").innerText = "Loaded from cache";
+        const video = card.querySelector("video");
+        video.src = data.video_url;
+        video.style.display = "block";
+        return;
+      }
+
+      const jobId = data.job_id;
+      const card = createJobCard(jobId);
+
+      const statusEl = card.querySelector(".status");
+      const videoEl = card.querySelector("video");
+
+      statusEl.innerText = "Job created. Waiting for updates...";
+
+      const pollInterval = setInterval(async () => {
+        try {
+          const res = await fetch(`${BACKEND_URL}/status/${jobId}`);
+          const jobData = await res.json();
+
+          if (jobData.message) {
+            statusEl.innerText = jobData.message;
+          }
+
+          if (jobData.status === "done") {
+            videoEl.src = jobData.video_url;
+            videoEl.style.display = "block";
+            statusEl.innerText = "Done 🎉";
+            clearInterval(pollInterval);
+          }
+
+          if (jobData.status === "failed") {
+            statusEl.innerText = "Failed ❌";
+            clearInterval(pollInterval);
+          }
+        } catch (err) {
+          statusEl.innerText = "Error fetching status";
+          clearInterval(pollInterval);
+        }
+      }, 3000);
+    }
+  </script>
 </body>
-<script>
-const BACKEND = https://texttovideo-8ena.onrender.com;
-
-async function generate() {
-  const prompt = document.getElementById("prompt").value;
-  const style = document.getElementById("style").value;
-  const status = document.getElementById("status");
-  const video = document.getElementById("video");
-
-  status.innerText = "Starting…";
-  video.style.display = "none";
-
-  const res = await fetch(`${BACKEND}/generate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt, style })
-  });
-
-  const data = await res.json();
-
-  if (data.cached) {
-    video.src = data.video_url;
-    video.style.display = "block";
-    status.innerText = "Loaded from cache";
-    return;
-  }
-
-  const jobId = data.job_id;
-
-  const poll = setInterval(async () => {
-    const s = await fetch(`${BACKEND}/status/${jobId}`);
-    const d = await s.json();
-
-    if (d.message) {
-      status.innerText = d.message;
-    }
-
-    if (d.status === "done") {
-      video.src = d.video_url;
-      video.style.display = "block";
-      status.innerText = "Done 🎉";
-      clearInterval(poll);
-    }
-
-    if (d.status === "failed") {
-      status.innerText = "Failed ❌";
-      clearInterval(poll);
-    }
-  }, 3000);
-}
-</script>
 </html>
